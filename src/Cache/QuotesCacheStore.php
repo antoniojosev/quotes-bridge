@@ -35,6 +35,13 @@ class QuotesCacheStore
         );
     }
 
+    public function isHydrated(): bool
+    {
+        $payload = $this->cache->get($this->key);
+
+        return ($payload['is_hydrated'] ?? false) === true;
+    }
+
     public function find(int $id): ?Quote
     {
         $sorted = $this->all();
@@ -46,6 +53,7 @@ class QuotesCacheStore
     public function insert(Quote $quote): void
     {
         $sorted = $this->all();
+        $hydrated = $this->isHydrated();
         $pos = $this->bs->insertionPointFor($sorted, $quote->id);
 
         if (isset($sorted[$pos]) && $sorted[$pos]->id === $quote->id) {
@@ -54,7 +62,12 @@ class QuotesCacheStore
             array_splice($sorted, $pos, 0, [$quote]);
         }
 
-        $this->persist($sorted);
+        $this->persist($sorted, $hydrated);
+    }
+
+    public function markHydrated(): void
+    {
+        $this->persist($this->all(), true);
     }
 
     public function flush(): void
@@ -65,11 +78,11 @@ class QuotesCacheStore
     /**
      * @param  Quote[]  $sorted
      */
-    private function persist(array $sorted): void
+    private function persist(array $sorted, bool $hydrated): void
     {
         $this->cache->put($this->key, [
             'quotes' => array_map(fn (Quote $q) => $q->toArray(), $sorted),
-            'is_hydrated' => true,
+            'is_hydrated' => $hydrated,
         ], $this->ttl);
     }
 }

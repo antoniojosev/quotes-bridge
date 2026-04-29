@@ -23,18 +23,46 @@ function makeService(FakeQuotesClient $client): array
     return [new QuotesService($client, $store), $store];
 }
 
-it('getAll fetches from the client only when the cache is empty', function () {
+it('getAll fetches from the client only when the cache is not hydrated', function () {
     $client = new FakeQuotesClient(quotes: [
         new Quote(1, 'a', 'A'),
         new Quote(2, 'b', 'B'),
     ]);
-    [$service] = makeService($client);
+    [$service, $store] = makeService($client);
 
     $first = $service->getAll();
+
+    expect($store->isHydrated())->toBeTrue()
+        ->and($first)->toHaveCount(2);
+
     $second = $service->getAll();
 
-    expect($first)->toHaveCount(2)
-        ->and($second)->toHaveCount(2)
+    expect($second)->toHaveCount(2)
+        ->and($client->getAllCalls)->toBe(1);
+});
+
+it('getAll bypasses a partially populated cache and fetches from the client', function () {
+    $client = new FakeQuotesClient(
+        quotes: [
+            new Quote(1, 'a', 'A'),
+            new Quote(2, 'b', 'B'),
+            new Quote(3, 'c', 'C'),
+        ],
+        byId: [
+            2 => new Quote(2, 'b', 'B'),
+        ],
+    );
+    [$service, $store] = makeService($client);
+
+    // Simulate a prior single-quote miss that left the cache partial.
+    $service->getById(2);
+    expect($store->isHydrated())->toBeFalse()
+        ->and($store->all())->toHaveCount(1);
+
+    $all = $service->getAll();
+
+    expect($all)->toHaveCount(3)
+        ->and($store->isHydrated())->toBeTrue()
         ->and($client->getAllCalls)->toBe(1);
 });
 

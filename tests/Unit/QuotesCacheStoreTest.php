@@ -18,11 +18,12 @@ function makeStore(): QuotesCacheStore
     );
 }
 
-it('starts empty', function () {
+it('starts empty and not hydrated', function () {
     $store = makeStore();
 
     expect($store->all())->toBe([])
-        ->and($store->find(1))->toBeNull();
+        ->and($store->find(1))->toBeNull()
+        ->and($store->isHydrated())->toBeFalse();
 });
 
 it('inserts and retrieves a quote', function () {
@@ -68,7 +69,7 @@ it('updates instead of duplicating when inserting an existing id', function () {
         ->and($store->find(1)?->quote)->toBe('updated');
 });
 
-it('persists with the is_hydrated flag', function () {
+it('persists with is_hydrated false after a partial insert', function () {
     $cache = new Repository(new ArrayStore());
     $store = new QuotesCacheStore(
         cache: $cache,
@@ -81,14 +82,33 @@ it('persists with the is_hydrated flag', function () {
     $raw = $cache->get('test:quotes_store');
 
     expect($raw)->toBeArray()
-        ->and($raw['is_hydrated'] ?? null)->toBeTrue();
+        ->and($raw)->toHaveKey('is_hydrated')
+        ->and($raw['is_hydrated'])->toBeFalse();
+});
+
+it('flips is_hydrated to true on markHydrated() and preserves it through inserts', function () {
+    $store = makeStore();
+    $store->insert(new Quote(1, 'a', 'A'));
+    $store->insert(new Quote(2, 'b', 'B'));
+
+    expect($store->isHydrated())->toBeFalse();
+
+    $store->markHydrated();
+
+    expect($store->isHydrated())->toBeTrue();
+
+    $store->insert(new Quote(3, 'c', 'C'));
+
+    expect($store->isHydrated())->toBeTrue();
 });
 
 it('clears all state on flush()', function () {
     $store = makeStore();
     $store->insert(new Quote(1, 'hi', 'a'));
+    $store->markHydrated();
 
     $store->flush();
 
-    expect($store->all())->toBe([]);
+    expect($store->all())->toBe([])
+        ->and($store->isHydrated())->toBeFalse();
 });

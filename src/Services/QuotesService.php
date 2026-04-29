@@ -21,14 +21,14 @@ class QuotesService
      */
     public function getAll(): array
     {
-        $cached = $this->cache->all();
-        if (count($cached) > 0) {
-            return $cached;
+        if ($this->cache->isHydrated()) {
+            return $this->cache->all();
         }
 
         foreach ($this->client->getAll() as $quote) {
             $this->cache->insert($quote);
         }
+        $this->cache->markHydrated();
 
         return $this->cache->all();
     }
