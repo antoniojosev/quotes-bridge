@@ -1,0 +1,11 @@
+services:
+  quotes-bridge:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: quotes-bridge
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/package
+    restart: "no"
