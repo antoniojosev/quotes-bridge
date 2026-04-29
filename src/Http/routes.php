@@ -10,3 +10,5 @@ Route::prefix('api/quotes')->group(function () {
     Route::get('/{id}', [QuotesController::class, 'show'])
         ->where('id', '[0-9]+');
 });
+
+Route::view('/quotes-ui', 'quotes-bridge::index');
