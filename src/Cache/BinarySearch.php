@@ -6,7 +6,7 @@ namespace AntonioVila\QuotesBridge\Cache;
 
 use AntonioVila\QuotesBridge\Saloon\Dto\Quote;
 
-final class BinarySearch
+class BinarySearch
 {
     public int $lastComparisons = 0;
 

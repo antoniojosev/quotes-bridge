@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AntonioVila\QuotesBridge\Saloon\Dto;
 
-final class Quote
+class Quote
 {
     public function __construct(
         public readonly int $id,
