@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace AntonioVila\QuotesBridge;
 
 use AntonioVila\QuotesBridge\Cache\QuotesCacheStore;
+use AntonioVila\QuotesBridge\Console\BatchImportCommand;
 use AntonioVila\QuotesBridge\Contracts\QuotesClient;
 use AntonioVila\QuotesBridge\Saloon\DummyJsonConnector;
 use AntonioVila\QuotesBridge\Services\DummyJsonQuotesClient;
 use AntonioVila\QuotesBridge\Services\QuotesService;
 use AntonioVila\QuotesBridge\Services\RateLimiter;
+use AntonioVila\QuotesBridge\Support\RealSleeper;
+use AntonioVila\QuotesBridge\Support\Sleeper;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Support\ServiceProvider;
@@ -18,7 +21,7 @@ class QuotesServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/quotes.php', 'quotes');
+        $this->mergeConfigFrom(__DIR__.'/../config/quotes.php', 'quotes');
 
         $this->app->singleton(DummyJsonConnector::class, function ($app) {
             $config = $app->make(ConfigRepository::class);
@@ -59,10 +62,18 @@ class QuotesServiceProvider extends ServiceProvider
             $app->make(QuotesClient::class),
             $app->make(QuotesCacheStore::class),
         ));
+
+        $this->app->singleton(Sleeper::class, RealSleeper::class);
     }
 
     public function boot(): void
     {
-        $this->loadRoutesFrom(__DIR__ . '/Http/routes.php');
+        $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                BatchImportCommand::class,
+            ]);
+        }
     }
 }

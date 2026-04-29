@@ -14,4 +14,9 @@ interface QuotesClient
     public function getAll(): array;
 
     public function getById(int $id): ?Quote;
+
+    /**
+     * @return Quote[]
+     */
+    public function getPage(int $limit, int $skip): array;
 }

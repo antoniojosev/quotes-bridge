@@ -13,6 +13,8 @@ class FakeQuotesClient implements QuotesClient
 
     public int $getByIdCalls = 0;
 
+    public int $getPageCalls = 0;
+
     /**
      * @param  Quote[]  $quotes
      * @param  array<int, Quote|null>  $byId
@@ -35,5 +37,12 @@ class FakeQuotesClient implements QuotesClient
         $this->getByIdCalls++;
 
         return $this->byId[$id] ?? null;
+    }
+
+    public function getPage(int $limit, int $skip): array
+    {
+        $this->getPageCalls++;
+
+        return array_slice($this->quotes, $skip, $limit);
     }
 }

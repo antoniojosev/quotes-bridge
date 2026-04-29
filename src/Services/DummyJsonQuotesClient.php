@@ -23,15 +23,7 @@ class DummyJsonQuotesClient implements QuotesClient
      */
     public function getAll(): array
     {
-        $this->rateLimiter->attempt();
-
-        $response = $this->connector->send(new GetAllQuotesRequest(limit: 100, skip: 0));
-        $body = $response->json();
-
-        return array_map(
-            fn (array $q) => Quote::fromArray($q),
-            $body['quotes'] ?? []
-        );
+        return $this->getPage(limit: 100, skip: 0);
     }
 
     public function getById(int $id): ?Quote
@@ -45,5 +37,21 @@ class DummyJsonQuotesClient implements QuotesClient
         }
 
         return Quote::fromArray($response->json());
+    }
+
+    /**
+     * @return Quote[]
+     */
+    public function getPage(int $limit, int $skip): array
+    {
+        $this->rateLimiter->attempt();
+
+        $response = $this->connector->send(new GetAllQuotesRequest(limit: $limit, skip: $skip));
+        $body = $response->json();
+
+        return array_map(
+            fn (array $q) => Quote::fromArray($q),
+            $body['quotes'] ?? []
+        );
     }
 }
