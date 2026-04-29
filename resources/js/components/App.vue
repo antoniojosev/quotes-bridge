@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import QuoteFinder from './QuoteFinder.vue'
 import QuoteList from './QuoteList.vue'
 </script>
 
@@ -7,6 +8,7 @@ import QuoteList from './QuoteList.vue'
         <header class="qb-header">
             <h1>Quotes Bridge</h1>
         </header>
+        <QuoteFinder />
         <QuoteList />
     </main>
 </template>
