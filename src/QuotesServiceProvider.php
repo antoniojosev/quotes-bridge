@@ -74,6 +74,10 @@ class QuotesServiceProvider extends ServiceProvider
             $this->commands([
                 BatchImportCommand::class,
             ]);
+
+            $this->publishes([
+                __DIR__.'/../config/quotes.php' => config_path('quotes.php'),
+            ], 'quotes-config');
         }
     }
 }
