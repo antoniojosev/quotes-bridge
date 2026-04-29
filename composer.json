@@ -1,0 +1,54 @@
+{
+    "name": "antoniovila/quotes-bridge",
+    "description": "Laravel package that bridges the DummyJSON Quotes API with non-blocking rate limiting, O(log n) cache retrieval, and a publishable Vue 3 UI.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["laravel", "package", "quotes", "dummyjson", "saloon", "vue"],
+    "authors": [
+        {"name": "Antonio Vila"}
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/cache": "^10.0|^11.0",
+        "illuminate/console": "^10.0|^11.0",
+        "illuminate/contracts": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0",
+        "illuminate/routing": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/view": "^10.0|^11.0",
+        "saloonphp/saloon": "^3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "pestphp/pest": "^2.0|^3.0",
+        "pestphp/pest-plugin-laravel": "^2.0|^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AntonioVila\\QuotesBridge\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AntonioVila\\QuotesBridge\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AntonioVila\\QuotesBridge\\QuotesServiceProvider"
+            ],
+            "aliases": {
+                "Quotes": "AntonioVila\\QuotesBridge\\Facades\\Quotes"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
