@@ -47,7 +47,8 @@ class BatchImportCommand extends Command
             }
 
             if ($page === []) {
-                $this->warn('API exhausted at '.count($this->cache->all())." quotes (target: {$target}).");
+                $cached = count($this->cache->all());
+                $this->warn("API exhausted at {$cached} quotes (target: {$target}).");
                 break;
             }
 
@@ -61,7 +62,8 @@ class BatchImportCommand extends Command
             $skip += $pageSize;
         }
 
-        $this->info('Imported. Cache holds '.count($this->cache->all()).' unique quotes.');
+        $cached = count($this->cache->all());
+        $this->info("Imported. Cache holds {$cached} unique quotes.");
 
         return self::SUCCESS;
     }
