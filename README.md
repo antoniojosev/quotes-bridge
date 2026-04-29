@@ -198,6 +198,95 @@ BatchImportCommand ──> QuotesClient
 
 ---
 
+## Diagramas de flujo
+
+### `GET /api/quotes/{id}`
+
+Cache-first lookup. La búsqueda binaria decide si hace falta tocar la API upstream.
+
+```mermaid
+sequenceDiagram
+    participant UI as Vue UI (QuoteFinder)
+    participant Router as Laravel Router
+    participant Ctrl as QuotesController
+    participant Svc as QuotesService
+    participant Cache as QuotesCacheStore
+    participant BS as BinarySearch
+    participant Client as DummyJsonQuotesClient
+    participant RL as RateLimiter
+    participant API as DummyJSON API
+
+    UI->>Router: GET /api/quotes/7
+    Router->>Ctrl: show(7)
+    Ctrl->>Svc: getById(7)
+    Svc->>Cache: find(7)
+    Cache->>BS: find(sorted, 7)
+    BS-->>Cache: index | null
+
+    alt cache hit
+        Cache-->>Svc: Quote
+        Svc-->>Ctrl: Quote
+    else cache miss
+        Svc->>Client: getById(7)
+        Client->>RL: attempt()
+        alt limit reached
+            RL-->>Client: throws RateLimitExceededException
+            Client-->>Svc: throws
+            Svc-->>Ctrl: throws
+        else under limit
+            RL-->>Client: ok
+            Client->>API: GET /quotes/7
+            API-->>Client: {id, quote, author}
+            Client-->>Svc: Quote
+            Svc->>Cache: insert(Quote)
+            Cache->>BS: insertionPointFor(sorted, 7)
+            BS-->>Cache: index
+        end
+        Svc-->>Ctrl: Quote | null
+    end
+
+    Ctrl-->>Router: JsonResponse
+    Router-->>UI: 200 / 404
+```
+
+### `php artisan quotes:batch-import {count}`
+
+A diferencia del endpoint, este flujo **sí** captura `RateLimitExceededException`, espera, y continúa.
+
+```mermaid
+sequenceDiagram
+    participant CLI as Artisan
+    participant Cmd as BatchImportCommand
+    participant Client as DummyJsonQuotesClient
+    participant RL as RateLimiter
+    participant Cache as QuotesCacheStore
+    participant Sleep as Sleeper
+    participant API as DummyJSON API
+
+    CLI->>Cmd: quotes:batch-import 100
+    loop hasta count(cache) >= target o API agotada
+        Cmd->>Client: getPage(30, skip)
+        Client->>RL: attempt()
+        alt limit reached
+            RL-->>Client: throws
+            Client-->>Cmd: RateLimitExceededException
+            Cmd->>Sleep: sleep(retryAfter)
+            Note right of Cmd: continue loop
+        else under limit
+            RL-->>Client: ok
+            Client->>API: GET /quotes?limit=30&skip=N
+            API-->>Client: {quotes: [...]}
+            Client-->>Cmd: Quote[]
+            loop cada quote
+                Cmd->>Cache: insert(quote)
+            end
+        end
+    end
+    Cmd-->>CLI: SUCCESS + summary
+```
+
+---
+
 ## Referencia de endpoints
 
 | Método | Path | Descripción |
