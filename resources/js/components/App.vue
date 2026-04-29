@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import QuoteList from './QuoteList.vue'
 </script>
 
 <template>
     <main class="qb-app">
         <header class="qb-header">
             <h1>Quotes Bridge</h1>
-            <p>UI is loading…</p>
         </header>
+        <QuoteList />
     </main>
 </template>
 
@@ -20,12 +21,7 @@
 }
 
 .qb-header h1 {
-    margin: 0 0 0.5rem;
+    margin: 0 0 1.25rem;
     font-size: 1.5rem;
-}
-
-.qb-header p {
-    margin: 0;
-    color: #6b7280;
 }
 </style>
